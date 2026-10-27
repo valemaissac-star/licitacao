@@ -1,0 +1,492 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <style>
+        .cabecalho-resultados-avancado {
+            margin-bottom: 20px;
+            font-family: sans-serif;
+            background: #0B1426;
+            border: 1px solid #1C2C4A;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .cabecalho-resultados-avancado h2 {
+            font-size: 22px;
+            color: #FFF;
+            margin: 0 0 15px 0;
+            font-weight: 500;
+        }
+        .linha-filtros-ativos {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #A0B0C0;
+        }
+        .badge-filtro {
+            background: #EAECEF;
+            color: #333;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .linha-ordenacao {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 15px;
+        }
+        .select-ordenacao {
+            background: #0B1426;
+            color: #FFF;
+            border: 1px solid #1C2C4A;
+            padding: 8px 12px;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+        }
+        .barra-paginacao {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+            color: #A0B0C0;
+            font-size: 14px;
+        }
+        .barra-paginacao button {
+            background: transparent;
+            border: none;
+            color: #6699FF;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 5px 10px;
+        }
+        .barra-paginacao button:disabled {
+            color: #333;
+            cursor: not-allowed;
+        }
+        .btn-pagina {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid transparent;
+            font-size: 14px !important;
+        }
+        .btn-pagina.ativa {
+            background: #112B5A;
+            color: #FFF;
+            font-weight: bold;
+        }
+        .select-por-pagina {
+            background: #0B1426;
+            color: #FFF;
+            border: 1px solid #1C2C4A;
+            padding: 6px 12px;
+            border-radius: 6px;
+            margin-left: 15px;
+            cursor: pointer;
+        }
+    </style>
+
+    <main class="pagina">
+
+        <header class="cabecalho">
+            <span class="marca">CONECTA LICITAÇÕES</span>
+            <h1>Pesquisa de Licitações</h1>
+            <p>Encontre oportunidades de contratação pública de forma rápida e organizada.</p>
+        </header>
+
+        <section class="card-filtros">
+
+            <div class="card-cabecalho">
+                <div class="icone-filtro">◇</div>
+                <div>
+                    <span class="card-legenda">FILTROS</span>
+                    <h2>Refine sua busca</h2>
+                </div>
+            </div>
+
+            <!-- FILTROS SALVOS -->
+            <div class="area-filtros-salvos">
+                <label for="filtros-salvos">Filtros salvos</label>
+                <div class="linha-filtros-salvos">
+                    <select id="filtros-salvos">
+                        <option value="">Selecione um filtro salvo</option>
+                    </select>
+                    <button id="abrir-modal-filtro" class="botao-gerenciar-filtro botao-adicionar" type="button" title="Salvar filtro atual">+</button>
+                    <button id="excluir-filtro" class="botao-gerenciar-filtro botao-remover" type="button" title="Excluir filtro selecionado">−</button>
+                </div>
+                <span class="ajuda-filtro">Salve combinações de filtros para reutilizar em pesquisas futuras.</span>
+            </div>
+
+            <div class="divisor"></div>
+
+            <!-- 1. FILTROS FIXOS -->
+            <div class="filtros-fixos">
+                
+                <div class="area-status">
+                    <span class="titulo-status">Status</span>
+                    <div class="opcoes-status">
+                        <label class="opcao-status">
+                            <input type="radio" name="status-visual" value="recebendo" checked>
+                            <span class="texto-status">A receber / Recebendo proposta</span>
+                        </label>
+                        <label class="opcao-status">
+                            <input type="radio" name="status-visual" value="propostas_encerradas">
+                            <span class="texto-status">Em julgamento / Propostas encerradas</span>
+                        </label>
+                        <label class="opcao-status">
+                            <input type="radio" name="status-visual" value="encerradas">
+                            <span class="texto-status">Encerradas</span>
+                        </label>
+                        <label class="opcao-status">
+                            <input type="radio" name="status-visual" value="todos">
+                            <span class="texto-status">Todos</span>
+                        </label>
+                    </div>
+                    <select id="status" class="status-compatibilidade" aria-hidden="true" tabindex="-1">
+                        <option value="recebendo" selected>A receber / Recebendo proposta</option>
+                        <option value="propostas_encerradas">Em julgamento / Propostas encerradas</option>
+                        <option value="encerradas">Encerradas</option>
+                        <option value="todos">Todos</option>
+                    </select>
+                </div>
+
+                <div class="grade-duas-colunas">
+                    <div class="campo" style="grid-column: 1 / -1;">
+                        <label for="numero-pncp">Nº PNCP (Busca exata pela Oportunidade)</label>
+                        <input id="numero-pncp" type="text" placeholder="Ex.: 07954480000179-1-026431/2026" autocomplete="off">
+                    </div>
+                    <div class="campo">
+                        <label for="palavra-chave">Palavra-chave (Busca nos Itens)</label>
+                        <input id="palavra-chave" type="text" placeholder="Ex.: papel" autocomplete="off">
+                    </div>
+                    <div class="campo">
+                        <label for="exclusoes">Palavras para excluir (Busca nos Itens)</label>
+                        <input id="exclusoes" type="text" placeholder="Ex.: jornal, reciclado" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="grade-datas">
+                    <div class="campo">
+                        <label for="data-publicacao-inicio">Publicação PNCP (Início)</label>
+                        <input id="data-publicacao-inicio" type="text" placeholder="DD/MM/AAAA" onfocus="this.type='date'" onblur="if(!this.value) this.type='text'">
+                    </div>
+                    <div class="campo">
+                        <label for="data-publicacao-fim">Publicação PNCP (Fim)</label>
+                        <input id="data-publicacao-fim" type="text" placeholder="DD/MM/AAAA" onfocus="this.type='date'" onblur="if(!this.value) this.type='text'">
+                    </div>
+                    <div class="campo">
+                        <label for="data-propostas-inicio">Recebimento Propostas (Início)</label>
+                        <input id="data-propostas-inicio" type="text" placeholder="DD/MM/AAAA" onfocus="this.type='date'" onblur="if(!this.value) this.type='text'">
+                    </div>
+                    <div class="campo">
+                        <label for="data-propostas-fim">Recebimento Propostas (Fim)</label>
+                        <input id="data-propostas-fim" type="text" placeholder="DD/MM/AAAA" onfocus="this.type='date'" onblur="if(!this.value) this.type='text'">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 2. RETRÁTIL 1: LOCALIZAÇÃO E REGRAS -->
+            <div class="sanfona sanfona-localizacao">
+                <button class="sanfona-cabecalho" type="button" aria-expanded="false">
+                    <span class="sanfona-titulo">Localização e Regras</span>
+                    <span class="sanfona-icone">▾</span>
+                </button>
+                <div class="sanfona-conteudo">
+                    <div>
+                        <div class="grade-localizacao">
+                            <!-- ESTADOS / UFs -->
+                            <div class="campo campo-multiselect campo-ufs">
+                                <label>Estados / UFs</label>
+                                <div id="multiselect-ufs" class="multiselect">
+                                    <div class="municipios-campo-linha">
+                                        <button id="botao-ufs" class="campo-selecao multiselect-botao botao-municipios" type="button" aria-expanded="false">
+                                            <span id="texto-ufs" class="multiselect-texto">Selecione os estados</span>
+                                            <span class="seta">▾</span>
+                                        </button>
+                                        <button id="info-ufs" class="info-municipios" type="button" aria-label="Ver estados selecionados" aria-expanded="false" hidden>i</button>
+                                        
+                                        <div id="tooltip-ufs" class="tooltip-municipios">
+                                            <div class="tooltip-cabecalho">
+                                                <div>
+                                                    <span class="tooltip-legenda">SELEÇÃO ATUAL</span>
+                                                    <strong>Estados selecionados</strong>
+                                                </div>
+                                            </div>
+                                            <div id="lista-tooltip-ufs" class="lista-tooltip-municipios"></div>
+                                        </div>
+                                    </div>
+                                    <div id="menu-ufs" class="multiselect-menu">
+                                        <div class="multiselect-pesquisa">
+                                            <input id="pesquisa-ufs" type="text" placeholder="Pesquisar estado ou UF..." autocomplete="off">
+                                        </div>
+                                        <div id="lista-ufs" class="multiselect-lista"></div>
+                                        <div class="multiselect-rodape">
+                                            <span id="contador-ufs">0 selecionados</span>
+                                            <div class="multiselect-acoes">
+                                                <button id="limpar-ufs" class="multiselect-limpar" type="button">Limpar</button>
+                                                <button id="concluir-ufs" class="multiselect-concluir" type="button">Concluído</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- MUNICÍPIOS -->
+                            <div class="campo campo-multiselect campo-municipios">
+                                <label>Municípios</label>
+                                <div id="multiselect-municipios" class="multiselect">
+                                    <div class="municipios-campo-linha">
+                                        <button id="botao-municipios" class="campo-selecao multiselect-botao botao-municipios" type="button" aria-expanded="false" disabled>
+                                            <span id="texto-municipios" class="multiselect-texto">Selecione primeiro os estados</span>
+                                            <span class="seta">▾</span>
+                                        </button>
+                                        <button id="info-municipios" class="info-municipios" type="button" aria-label="Ver municípios selecionados" aria-expanded="false" hidden>i</button>
+                                        
+                                        <div id="tooltip-municipios" class="tooltip-municipios">
+                                            <div class="tooltip-cabecalho">
+                                                <div>
+                                                    <span class="tooltip-legenda">SELEÇÃO ATUAL</span>
+                                                    <strong>Municípios selecionados</strong>
+                                                </div>
+                                            </div>
+                                            <div id="lista-tooltip-municipios" class="lista-tooltip-municipios"></div>
+                                        </div>
+                                    </div>
+                                    <div id="menu-municipios" class="multiselect-menu">
+                                        <div class="multiselect-pesquisa">
+                                            <input id="pesquisa-municipios" type="text" placeholder="Pesquisar município..." autocomplete="off">
+                                        </div>
+                                        <div id="lista-municipios" class="multiselect-lista"></div>
+                                        <div class="multiselect-rodape">
+                                            <span id="contador-municipios">0 selecionados</span>
+                                            <div class="multiselect-acoes">
+                                                <button id="limpar-municipios" class="multiselect-limpar" type="button">Limpar</button>
+                                                <button id="concluir-municipios" class="multiselect-concluir" type="button">Concluído</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ESFERA -->
+                            <div class="campo campo-multiselect campo-esfera">
+                                <label>Esfera</label>
+                                <div id="multiselect-esferas" class="multiselect">
+                                    <button id="botao-esferas" class="campo-selecao multiselect-botao" type="button" aria-expanded="false">
+                                        <span id="texto-esferas" class="multiselect-texto">Selecione as esferas</span>
+                                        <span class="seta">▾</span>
+                                    </button>
+                                    <div id="menu-esferas" class="multiselect-menu">
+                                        <div class="multiselect-pesquisa">
+                                            <input id="pesquisa-esferas" type="text" placeholder="Pesquisar esfera..." autocomplete="off">
+                                        </div>
+                                        <div id="lista-esferas" class="multiselect-lista"></div>
+                                        <div class="multiselect-rodape">
+                                            <span id="contador-esferas">0 selecionadas</span>
+                                            <div class="multiselect-acoes">
+                                                <button id="limpar-esferas" class="multiselect-limpar" type="button">Limpar</button>
+                                                <button id="concluir-esferas" class="multiselect-concluir" type="button">Concluído</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grade-regras-linha2">
+                            <!-- MODALIDADES -->
+                            <div class="campo campo-multiselect campo-modalidades">
+                                <label>Modalidades</label>
+                                <div id="multiselect-modalidades" class="multiselect">
+                                    <button id="botao-modalidades" class="campo-selecao multiselect-botao" type="button" aria-expanded="false">
+                                        <span id="texto-modalidades" class="multiselect-texto">Selecione as modalidades</span>
+                                        <span class="seta">▾</span>
+                                    </button>
+                                    <div id="menu-modalidades" class="multiselect-menu">
+                                        <div class="multiselect-pesquisa">
+                                            <input id="pesquisa-modalidades" type="text" placeholder="Pesquisar modalidade..." autocomplete="off">
+                                        </div>
+                                        <div id="lista-modalidades" class="multiselect-lista"></div>
+                                        <div class="multiselect-rodape">
+                                            <span id="contador-modalidades">0 selecionadas</span>
+                                            <div class="multiselect-acoes">
+                                                <button id="limpar-modalidades" class="multiselect-limpar" type="button">Limpar</button>
+                                                <button id="concluir-modalidades" class="multiselect-concluir" type="button">Concluído</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TIPO MATERIAL/SERVIÇO -->
+                            <div class="campo campo-multiselect campo-tipos">
+                                <label>Tipo Material / Serviço</label>
+                                <div id="multiselect-tipos" class="multiselect">
+                                    <button id="botao-tipos" class="campo-selecao multiselect-botao" type="button" aria-expanded="false">
+                                        <span id="texto-tipos" class="multiselect-texto">Selecione os tipos</span>
+                                        <span class="seta">▾</span>
+                                    </button>
+                                    <div id="menu-tipos" class="multiselect-menu">
+                                        <div id="lista-tipos" class="multiselect-lista"></div>
+                                        <div class="multiselect-rodape">
+                                            <span id="contador-tipos">0 selecionados</span>
+                                            <div class="multiselect-acoes">
+                                                <button id="limpar-tipos" class="multiselect-limpar" type="button">Limpar</button>
+                                                <button id="concluir-tipos" class="multiselect-concluir" type="button">Concluído</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. RETRÁTIL 2: VALORES E QUANTIDADES -->
+            <div class="sanfona sanfona-valores">
+                <button class="sanfona-cabecalho" type="button" aria-expanded="false">
+                    <span class="sanfona-titulo">Valores e Quantidades</span>
+                    <span class="sanfona-icone">▾</span>
+                </button>
+                <div class="sanfona-conteudo">
+                    <div>
+                        <div class="area-periodo-valores">
+                            
+                            <div class="linha-centralizada linha-valores-campos">
+                                <div class="campo">
+                                    <label for="valor-minimo">Valor mínimo</label>
+                                    <div class="campo-dinheiro">
+                                        <span class="prefixo-real">R$</span>
+                                        <input id="valor-minimo" type="text" inputmode="numeric" placeholder="0,00" autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="campo">
+                                    <label for="valor-maximo">Valor máximo</label>
+                                    <div class="campo-dinheiro">
+                                        <span class="prefixo-real">R$</span>
+                                        <input id="valor-maximo" type="text" inputmode="numeric" placeholder="100.000,00" autocomplete="off">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="controle-faixa-valores">
+                                <div class="barra-valores">
+                                    <div class="linha-valores"></div>
+                                    <div id="faixa-valores-selecionada" class="faixa-valores-selecionada"></div>
+                                    <input id="range-valor-minimo" class="range-valor range-valor-minimo" type="range" min="0" max="10" value="0" step="1" aria-label="Valor mínimo da faixa">
+                                    <input id="range-valor-maximo" class="range-valor range-valor-maximo" type="range" min="0" max="10" value="10" step="1" aria-label="Valor máximo da faixa">
+                                </div>
+                                <div class="legenda-faixa-valores">
+                                    <span>R$ 0</span>
+                                    <span>R$ 5 mi+</span>
+                                </div>
+                            </div>
+
+                            <div class="area-aplicacao-valor" style="margin-top: 25px;">
+                                <span class="titulo-orcamento-sigiloso">Aplicar faixa de valor em:</span>
+                                <div class="opcoes-orcamento-sigiloso">
+                                    <label class="opcao-orcamento">
+                                        <input type="radio" name="tipo-filtro-valor" value="item_unitario" checked>
+                                        <span class="radio-orcamento"></span>
+                                        <span>Valor unitário do item</span>
+                                    </label>
+                                    <label class="opcao-orcamento">
+                                        <input type="radio" name="tipo-filtro-valor" value="item_total">
+                                        <span class="radio-orcamento"></span>
+                                        <span>Valor total do item</span>
+                                    </label>
+                                    <label class="opcao-orcamento">
+                                        <input type="radio" name="tipo-filtro-valor" value="oportunidade">
+                                        <span class="radio-orcamento"></span>
+                                        <span>Valor total da oportunidade</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="linha-centralizada linha-quantidade-itens" style="margin-top: 25px;">
+                                <div class="campo">
+                                    <label for="quantidade-itens-minima">Quantidade mínima de itens</label>
+                                    <input id="quantidade-itens-minima" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex.: 1" autocomplete="off">
+                                </div>
+                                <div class="campo">
+                                    <label for="quantidade-itens-maxima">Quantidade máxima de itens</label>
+                                    <input id="quantidade-itens-maxima" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex.: 20" autocomplete="off">
+                                </div>
+                            </div>
+
+                            <div class="area-orcamento-sigiloso" style="margin-top: 25px;">
+                                <span class="titulo-orcamento-sigiloso">Orçamento sigiloso</span>
+                                <div class="opcoes-orcamento-sigiloso">
+                                    <label class="opcao-orcamento">
+                                        <input type="radio" name="orcamento-sigiloso" value="incluir" checked>
+                                        <span class="radio-orcamento"></span>
+                                        <span>Incluir sigilosos</span>
+                                    </label>
+                                    <label class="opcao-orcamento">
+                                        <input type="radio" name="orcamento-sigiloso" value="informado">
+                                        <span class="radio-orcamento"></span>
+                                        <span>Com valor divulgado</span>
+                                    </label>
+                                    <label class="opcao-orcamento">
+                                        <input type="radio" name="orcamento-sigiloso" value="somente_sigiloso">
+                                        <span class="radio-orcamento"></span>
+                                        <span>Somente sigilosos</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AÇÕES -->
+            <div class="acoes">
+                <button id="botao-limpar" class="botao botao-limpar" type="button">Limpar</button>
+                <button id="botao-buscar" class="botao botao-buscar" type="button">
+                    <span class="icone-busca">⌕</span>
+                    <span>Buscar</span>
+                </button>
+            </div>
+
+        </section>
+
+        <section class="resultados">
+            <div class="resultados-cabecalho">
+                <span class="resultados-legenda">RESULTADOS</span>
+                <h2>Oportunidades</h2>
+                <p>Utilize os filtros acima para iniciar uma pesquisa.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL SALVAR FILTRO -->
+    <div id="modal-salvar-filtro" class="modal-overlay" style="display: none;">
+        <div class="modal-conteudo">
+            <h3>Salvar Filtro</h3>
+            <p>Digite um nome para este filtro:</p>
+            <input type="text" id="nome-novo-filtro" placeholder="Ex.: Filtro Principal de Compras" autocomplete="off">
+            <div class="modal-acoes">
+                <button type="button" id="modal-cancelar" class="botao botao-limpar">Cancelar</button>
+                <button type="button" id="modal-salvar" class="botao botao-buscar">Salvar</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <!-- A mágica para limpar o cache automaticamente está neste "?v=3.0" -->
+    <script src="{{ url_for('static', filename='pesquisa.js') }}?v=3.0"></script>
+{% endblock %}

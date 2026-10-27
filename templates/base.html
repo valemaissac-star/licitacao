@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conecta Licitações</title>
+    <!-- O seu CSS global -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Estilos básicos para o menu de navegação global */
+        body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; font-family: sans-serif; background-color: var(--fundo, #0A1128); color: white;}
+        .menu-global { background-color: #173A70; padding: 15px 20px; display: flex; gap: 20px; align-items: center; border-bottom: 2px solid #218D4E; }
+        .menu-global h1 { margin: 0; font-size: 20px; color: #218D4E; font-weight: bold; margin-right: 30px; letter-spacing: 1px;}
+        .menu-global a { color: white; text-decoration: none; font-size: 14px; padding: 8px 16px; border-radius: 6px; transition: 0.2s; }
+        .menu-global a:hover { background-color: rgba(255,255,255,0.1); }
+        .menu-global a.ativo { background-color: #218D4E; font-weight: bold; }
+        .conteudo-principal { flex: 1; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+    <!-- MENU GLOBAL -->
+    <nav class="menu-global">
+        <h1>CONECTA LICITAÇÕES</h1>
+        <a href="/" class="{% if pagina_atual == 'pesquisa' %}ativo{% endif %}">🔍 Pesquisa de Licitações</a>
+        <a href="/crm" class="{% if pagina_atual == 'crm' %}ativo{% endif %}">📊 CRM </a>
+        <a href="/documentos" class="{% if pagina_atual == 'documentos' %}ativo{% endif %}">📂 Documentos</a>
+        <a href="/calculadora" class="{% if pagina_atual == 'calculadora' %}ativo{% endif %}">💰 Calculadora de Custos</a>
+    </nav>
+
+    <!-- ÁREA DINÂMICA -->
+    <main class="conteudo-principal">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- PORTA ABERTA PARA OS SCRIPTS MODULARES -->
+    {% block scripts %}
+    {% endblock %}
+</body>
+</html>

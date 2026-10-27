@@ -1,0 +1,751 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <style>
+        .grid-calculadora {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 25px;
+            margin-top: 20px;
+            align-items: start;
+        }
+        
+        @media (max-width: 900px) {
+            .grid-calculadora { grid-template-columns: 1fr; }
+        }
+
+        .card-calc {
+            background: #0B1426;
+            border: 1px solid #1C2C4A;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .secao-titulo {
+            color: #FFF;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
+        /* Opções (Radios) Estilizadas */
+        .opcoes-grupo {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .opcao-calc {
+            position: relative;
+            cursor: pointer;
+        }
+        .opcao-calc input {
+            display: none;
+        }
+        .opcao-calc span {
+            display: inline-block;
+            background: #0B1426;
+            border: 1px solid #1C2C4A;
+            color: #A0B0C0;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .opcao-calc input:checked + span {
+            background: #112B5A;
+            border-color: #6699FF;
+            color: #FFF;
+        }
+        
+        .opcao-destaque input:checked + span {
+            background: #218D4E;
+            border-color: #4ADE80;
+            color: #FFF;
+        }
+
+        /* Inputs */
+        .input-grupo {
+            display: flex;
+            align-items: center;
+            background: #0B1426;
+            border: 1px solid #1C2C4A;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+            margin-bottom: 15px;
+        }
+        .input-grupo:focus-within {
+            border-color: #6699FF;
+        }
+        .input-addon {
+            background: #112B5A;
+            color: #A0B0C0;
+            padding: 0 12px;
+            font-size: 13px;
+            font-weight: 600;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid #1C2C4A;
+        }
+        .input-addon.sufixo {
+            border-right: none;
+            border-left: 1px solid #1C2C4A;
+        }
+        
+        /* Seletor Unitário/Total dentro do Input */
+        .input-select-addon {
+            background: #112B5A;
+            color: #A0B0C0;
+            border: none;
+            border-right: 1px solid #1C2C4A;
+            padding: 0 8px;
+            font-size: 11px;
+            font-weight: 600;
+            height: 38px;
+            outline: none;
+            cursor: pointer;
+        }
+        .input-select-addon option {
+            background: #0B1426;
+            color: #FFF;
+        }
+
+        .input-grupo input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #FFF;
+            padding: 0 12px;
+            height: 38px;
+            font-size: 14px;
+            outline: none;
+            width: 100%;
+        }
+
+        .campo-linha {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        .campo-linha label {
+            color: #A0B0C0;
+            font-size: 12px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .grade-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .grade-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 0.8fr;
+            gap: 15px;
+        }
+
+        /* Box do Item CRM Selecionado */
+        .box-item-crm {
+            background: rgba(102, 153, 255, 0.05);
+            border: 1px solid #6699FF;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .box-item-crm .header-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px dashed rgba(102, 153, 255, 0.3);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .badge-orcamento {
+            background: rgba(245, 183, 0, 0.1);
+            border: 1px solid #F5B700;
+            color: #F5B700;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        /* Painel Sala de Lance */
+        .painel-resultados {
+            position: sticky;
+            top: 20px;
+        }
+        
+        .box-resultado {
+            background: rgba(17, 43, 90, 0.4);
+            border: 1px solid rgba(102, 153, 255, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        .box-resultado.piso {
+            background: rgba(220, 53, 69, 0.1);
+            border-color: rgba(220, 53, 69, 0.3);
+        }
+
+        .valor-destaque {
+            font-size: 26px;
+            font-weight: 700;
+            color: #4ADE80;
+            margin: 5px 0;
+            letter-spacing: -0.5px;
+        }
+        .box-resultado.piso .valor-destaque {
+            color: #FF6B6B;
+        }
+        
+        .linha-resumo {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #A0B0C0;
+            padding: 6px 0;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+        }
+        .linha-resumo:last-child {
+            border-bottom: none;
+        }
+        .linha-resumo strong {
+            color: #FFF;
+        }
+        .linha-sub {
+            padding-left: 10px;
+            font-size: 12px;
+            color: #7A8B9E;
+        }
+
+        .alerta-exequibilidade {
+            background: rgba(245, 183, 0, 0.15);
+            border: 1px solid #B8860B;
+            color: #F5B700;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        /* Botões */
+        .btn-acao {
+            background-color: #FFFFFF;
+            color: #000000;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .btn-acao:hover { background-color: #EAECEF; }
+        
+        .btn-secundario {
+            background: transparent;
+            color: #A0B0C0;
+            border: 1px solid #1C2C4A;
+        }
+        .btn-secundario:hover {
+            background: rgba(255,255,255,0.05);
+            color: #FFF;
+        }
+        .btn-crm {
+            background-color: #218D4E;
+            color: #FFF;
+            border: none;
+        }
+        .btn-crm:hover { background-color: #1a733f; }
+        .btn-selecionar {
+            background: #112B5A;
+            border: 1px solid #6699FF;
+            color: #FFF;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: none;
+        }
+        .btn-selecionar:hover { background: #173875; }
+
+        .btn-alterar-item {
+            background: transparent;
+            border: 1px solid rgba(102, 153, 255, 0.4);
+            color: #6699FF;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        .btn-alterar-item:hover {
+            background: rgba(102, 153, 255, 0.1);
+            color: #FFF;
+        }
+
+        /* Modal CRM */
+        .lista-crm {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .item-crm {
+            background: #0B1426;
+            border: 1px solid #1C2C4A;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .item-crm:hover { border-color: #6699FF; background: rgba(102,153,255,0.05); }
+        .item-crm strong { color: #FFF; font-size: 13px; margin-bottom: 4px; }
+        .item-crm span { color: #7A8B9E; font-size: 11px; line-height: 1.4; }
+        
+        .pesquisa-crm {
+            width: 100%;
+            background: #0B1426;
+            border: 1px solid #1C2C4A;
+            color: #FFF;
+            padding: 10px 12px;
+            border-radius: 4px;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .btn-voltar {
+            background: transparent;
+            border: none;
+            color: #6699FF;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+    </style>
+
+    <main class="pagina">
+        <header class="cabecalho">
+            <span class="marca">CONECTA LICITAÇÕES</span>
+            <h1>Calculadora de Precificação</h1>
+            <p>Do custo ao lance: Descubra o seu Preço-Alvo e Preço-Piso matematicamente exatos.</p>
+        </header>
+
+        <div class="grid-calculadora">
+            <!-- COLUNA ESQUERDA: INPUTS -->
+            <div class="area-inputs">
+                
+                <!-- 1. MODO DE OPERAÇÃO E CONTEXTO -->
+                <div class="card-calc">
+                    <div class="secao-titulo">
+                        <span>1. Modo e Contexto</span>
+                        <span id="indicador-status" style="font-size: 11px; color: #4ADE80; font-weight: normal; display: none;">✓ Rascunho guardado</span>
+                    </div>
+                    
+                    <div class="campo-linha">
+                        <label>O que deseja fazer?</label>
+                        <div class="opcoes-grupo">
+                            <label class="opcao-calc">
+                                <input type="radio" name="calc-modo" value="simulacao" checked>
+                                <span>🔄 Apenas Simulação</span>
+                            </label>
+                            <label class="opcao-calc opcao-destaque">
+                                <input type="radio" name="calc-modo" value="crm">
+                                <span>🎯 Precificar Item do CRM</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Botão e Box do CRM (Aparece no Modo CRM) -->
+                    <button id="btn-abrir-seletor-crm" class="btn-selecionar" onclick="abrirModalSelecaoCrm()" style="margin-bottom: 20px;">
+                        🔍 Selecionar Licitação / Item no CRM
+                    </button>
+
+                    <!-- DADOS DO ITEM (Atualizado com botão Alterar) -->
+                    <div id="box-item-selecionado" class="box-item-crm">
+                        <div class="header-item">
+                            <div style="flex: 1; padding-right: 15px;">
+                                <strong id="lbl-crm-orgao" style="color: #6699FF; font-size: 11px; text-transform: uppercase;">Órgão</strong>
+                                <div style="color: #FFF; font-size: 14px; font-weight: bold; margin-top: 4px; line-height: 1.3;" id="lbl-crm-item-nome">Item não selecionado</div>
+                                <div style="font-size: 12px; color: #A0B0C0; margin-top: 5px;">Nº PNCP: <strong style="color: #FFF;" id="lbl-crm-pncp">-</strong></div>
+                            </div>
+                            <div style="text-align: right; min-width: 130px;">
+                                <div class="badge-orcamento">
+                                    Orçamento: <span id="lbl-crm-orcamento">R$ 0,00</span>
+                                </div>
+                                <br>
+                                <button class="btn-alterar-item" onclick="abrirModalSelecaoCrm()">🔄 Alterar Item</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grade-3">
+                        <div class="campo-linha" style="grid-column: span 2;">
+                            <label>Regime Tributário (O Seu)</label>
+                            <div class="opcoes-grupo">
+                                <label class="opcao-calc">
+                                    <input type="radio" name="calc-regime" value="mei">
+                                    <span>MEI</span>
+                                </label>
+                                <label class="opcao-calc">
+                                    <input type="radio" name="calc-regime" value="simples" checked>
+                                    <span>Simples Nacional</span>
+                                </label>
+                                <label class="opcao-calc">
+                                    <input type="radio" name="calc-regime" value="lucro">
+                                    <span>Lucro Presumido / Real</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="campo-linha">
+                            <label>Qtd. Solicitada</label>
+                            <div class="input-grupo">
+                                <input type="number" id="calc-quantidade" value="1" min="1" style="text-align: center; color: #6699FF; font-weight: bold;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="campo-linha">
+                        <label>Natureza do Objeto</label>
+                        <div class="opcoes-grupo">
+                            <label class="opcao-calc">
+                                <input type="radio" name="calc-tipo" value="bens" checked>
+                                <span>📦 Bens / Materiais</span>
+                            </label>
+                            <label class="opcao-calc">
+                                <input type="radio" name="calc-tipo" value="servicos">
+                                <span>🛠️ Serviços / Obras</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. CUSTOS DIRETOS -->
+                <div class="card-calc">
+                    <h3 class="secao-titulo">2. Linhas de Custo</h3>
+                    
+                    <!-- BENS -->
+                    <div id="bloco-custos-bens">
+                        <div class="grade-2">
+                            <div class="campo-linha">
+                                <label>Custo Base do Produto</label>
+                                <div class="input-grupo">
+                                    <select class="input-select-addon tipo-entrada-custo" data-id="bens-base">
+                                        <option value="unit">R$ / Unid.</option>
+                                        <option value="total">R$ Total</option>
+                                    </select>
+                                    <input type="text" id="custo-bens-base" class="input-moeda v-custo" placeholder="0,00" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="campo-linha">
+                                <label>Frete e Logística</label>
+                                <div class="input-grupo">
+                                    <select class="input-select-addon tipo-entrada-custo" data-id="bens-frete">
+                                        <option value="unit">R$ / Unid.</option>
+                                        <option value="total">R$ Total</option>
+                                    </select>
+                                    <input type="text" id="custo-bens-frete" class="input-moeda v-custo" placeholder="0,00" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="campo-linha">
+                                <label>Garantia / Embalagem</label>
+                                <div class="input-grupo">
+                                    <select class="input-select-addon tipo-entrada-custo" data-id="bens-garantia">
+                                        <option value="unit">R$ / Unid.</option>
+                                        <option value="total">R$ Total</option>
+                                    </select>
+                                    <input type="text" id="custo-bens-garantia" class="input-moeda v-custo" placeholder="0,00" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="campo-linha">
+                                <label>Outros Custos</label>
+                                <div class="input-grupo">
+                                    <select class="input-select-addon tipo-entrada-custo" data-id="bens-outros">
+                                        <option value="unit">R$ / Unid.</option>
+                                        <option value="total">R$ Total</option>
+                                    </select>
+                                    <input type="text" id="custo-bens-outros" class="input-moeda v-custo" placeholder="0,00" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SERVIÇOS -->
+                    <div id="bloco-custos-servicos" style="display: none;">
+                        <div class="grade-2">
+                            <div class="campo-linha">
+                                <label>Mão de Obra (Hora Téc. × Qtd)</label>
+                                <div class="input-grupo">
+                                    <select class="input-select-addon tipo-entrada-custo" data-id="serv-base">
+                                        <option value="unit">R$ / Unid.</option>
+                                        <option value="total">R$ Total</option>
+                                    </select>
+                                    <input type="text" id="custo-serv-base" class="input-moeda v-custo" placeholder="0,00" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="campo-linha">
+                                <label>Deslocação / Estadia</label>
+                                <div class="input-grupo">
+                                    <select class="input-select-addon tipo-entrada-custo" data-id="serv-frete">
+                                        <option value="unit">R$ / Unid.</option>
+                                        <option value="total">R$ Total</option>
+                                    </select>
+                                    <input type="text" id="custo-serv-frete" class="input-moeda v-custo" placeholder="0,00" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="campo-linha">
+                                <label>Materiais Aplicados</label>
+                                <div class="input-grupo">
+                                    <select class="input-select-addon tipo-entrada-custo" data-id="serv-garantia">
+                                        <option value="unit">R$ / Unid.</option>
+                                        <option value="total">R$ Total</option>
+                                    </select>
+                                    <input type="text" id="custo-serv-garantia" class="input-moeda v-custo" placeholder="0,00" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="campo-linha">
+                                <label>Outros Custos</label>
+                                <div class="input-grupo">
+                                    <select class="input-select-addon tipo-entrada-custo" data-id="serv-outros">
+                                        <option value="unit">R$ / Unid.</option>
+                                        <option value="total">R$ Total</option>
+                                    </select>
+                                    <input type="text" id="custo-serv-outros" class="input-moeda v-custo" placeholder="0,00" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. TRIBUTOS E TAXAS -->
+                <div class="card-calc" id="card-tributos">
+                    <h3 class="secao-titulo">3. Tributos e Taxas <span style="font-size: 11px; color:#7A8B9E; margin-left:10px; font-weight: normal;">(% sobre o faturamento)</span></h3>
+                    
+                    <div class="grade-2">
+                        <div class="campo-linha bloco-simples">
+                            <label>Alíquota do DAS</label>
+                            <div class="input-grupo">
+                                <input type="text" id="taxa-das" class="input-percentual v-imposto" placeholder="0,00" autocomplete="off">
+                                <span class="input-addon sufixo">%</span>
+                            </div>
+                        </div>
+
+                        <div class="campo-linha bloco-lucro bloco-lucro-bens" style="display: none;">
+                            <label>ICMS (Saída)</label>
+                            <div class="input-grupo">
+                                <input type="text" id="taxa-icms" class="input-percentual v-imposto" placeholder="0,00" autocomplete="off">
+                                <span class="input-addon sufixo">%</span>
+                            </div>
+                        </div>
+                        <div class="campo-linha bloco-lucro bloco-lucro-bens" style="display: none;">
+                            <label>IPI</label>
+                            <div class="input-grupo">
+                                <input type="text" id="taxa-ipi" class="input-percentual v-imposto" placeholder="0,00" autocomplete="off">
+                                <span class="input-addon sufixo">%</span>
+                            </div>
+                        </div>
+
+                        <div class="campo-linha bloco-lucro bloco-lucro-serv" style="display: none;">
+                            <label>ISS</label>
+                            <div class="input-grupo">
+                                <input type="text" id="taxa-iss" class="input-percentual v-imposto" placeholder="0,00" autocomplete="off">
+                                <span class="input-addon sufixo">%</span>
+                            </div>
+                        </div>
+
+                        <div class="campo-linha bloco-lucro" style="display: none;">
+                            <label>PIS + COFINS</label>
+                            <div class="input-grupo">
+                                <input type="text" id="taxa-pis-cofins" class="input-percentual v-imposto" placeholder="0,00" autocomplete="off">
+                                <span class="input-addon sufixo">%</span>
+                            </div>
+                        </div>
+
+                        <div class="campo-linha">
+                            <label>Comissão da Plataforma</label>
+                            <div class="input-grupo">
+                                <input type="text" id="taxa-plataforma" class="input-percentual" placeholder="0,00" autocomplete="off">
+                                <span class="input-addon sufixo">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. MARGENS DE LUCRO -->
+                <div class="card-calc">
+                    <h3 class="secao-titulo">4. Margem de Lucro Líquida</h3>
+                    
+                    <div class="grade-2">
+                        <div class="campo-linha">
+                            <label style="color: #4ADE80;">Margem Desejada (Seu Preço-Alvo) 🎯</label>
+                            <div class="input-grupo" style="border-color: rgba(74, 222, 128, 0.3);">
+                                <input type="text" id="margem-alvo" class="input-percentual" placeholder="20,00" autocomplete="off">
+                                <span class="input-addon sufixo">%</span>
+                            </div>
+                        </div>
+                        <div class="campo-linha">
+                            <label style="color: #FF6B6B;">Margem Mínima (Seu Preço-Piso) 🛑</label>
+                            <div class="input-grupo" style="border-color: rgba(220, 53, 69, 0.3);">
+                                <input type="text" id="margem-piso" class="input-percentual" placeholder="5,00" autocomplete="off">
+                                <span class="input-addon sufixo">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- COLUNA DIREITA: SALA DE LANCE -->
+            <div class="painel-resultados">
+                <div class="card-calc" style="padding: 0; overflow: hidden;">
+                    <div style="background: #112B5A; padding: 20px; border-bottom: 1px solid #1C2C4A;">
+                        <h2 style="margin: 0; font-size: 18px; color: #FFF; text-transform: uppercase;">Sala de Lance</h2>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #6699FF;">Baseado em <strong id="res-qtd-titulo">1</strong> unidade(s).</p>
+                    </div>
+
+                    <div style="padding: 20px;">
+                        
+                        <!-- PREÇOS FINAIS -->
+                        <div class="box-resultado alvo">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #A0B0C0; font-size: 11px; text-transform: uppercase; font-weight: bold;">🎯 ALVO UNITÁRIO</span>
+                                <span style="background: rgba(74,222,128,0.2); color: #4ADE80; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;" id="badge-alvo-margem">20% M.L.</span>
+                            </div>
+                            <div id="res-preco-alvo-unit" class="valor-destaque" style="font-size: 24px;">R$ 0,00</div>
+                            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(74,222,128,0.2);">
+                                <div style="font-size: 12px; color: #FFF; display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                    <span>Global (Total):</span> <strong style="color: #FFF;" id="res-preco-alvo-total">R$ 0,00</strong>
+                                </div>
+                                <div style="font-size: 12px; color: #FFF; display: flex; justify-content: space-between;">
+                                    <span>Lucro Global Limpo:</span> <strong style="color: #4ADE80;" id="res-lucro-alvo-total">R$ 0,00</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="box-resultado piso">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #A0B0C0; font-size: 11px; text-transform: uppercase; font-weight: bold;">🛑 PISO UNITÁRIO</span>
+                                <span style="background: rgba(255,107,107,0.2); color: #FF6B6B; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold;" id="badge-piso-margem">5% M.L.</span>
+                            </div>
+                            <div id="res-preco-piso-unit" class="valor-destaque" style="font-size: 24px;">R$ 0,00</div>
+                            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,107,107,0.2);">
+                                <div style="font-size: 12px; color: #FFF; display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                    <span>Global (Total):</span> <strong style="color: #FFF;" id="res-preco-piso-total">R$ 0,00</strong>
+                                </div>
+                                <div style="font-size: 12px; color: #FFF; display: flex; justify-content: space-between;">
+                                    <span>Lucro Global Limpo:</span> <strong style="color: #FF6B6B;" id="res-lucro-piso-total">R$ 0,00</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="divisor" style="margin: 20px 0; border-top: 1px dashed rgba(255,255,255,0.1);"></div>
+
+                        <!-- RESUMO DETALHADO DE CUSTOS -->
+                        <h4 style="color: #FFF; font-size: 13px; margin: 0 0 10px 0;">Resumo de Custos (Global)</h4>
+                        
+                        <div class="linha-resumo linha-sub">
+                            <span id="lbl-resumo-base">Custo Base</span>
+                            <strong id="res-detalhe-base">R$ 0,00</strong>
+                        </div>
+                        <div class="linha-resumo linha-sub">
+                            <span id="lbl-resumo-frete">Logística/Deslocamento</span>
+                            <strong id="res-detalhe-frete">R$ 0,00</strong>
+                        </div>
+                        <div class="linha-resumo linha-sub">
+                            <span id="lbl-resumo-garantia">Garantia/Materiais</span>
+                            <strong id="res-detalhe-garantia">R$ 0,00</strong>
+                        </div>
+                        <div class="linha-resumo linha-sub">
+                            <span>Outros Custos</span>
+                            <strong id="res-detalhe-outros">R$ 0,00</strong>
+                        </div>
+                        
+                        <div class="linha-resumo" style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                            <span style="color: #FFF; font-weight: bold;">Custo Real Bruto Total</span>
+                            <strong id="res-custo-total" style="color: #6699FF; font-size: 14px;">R$ 0,00</strong>
+                        </div>
+                        <div class="linha-resumo">
+                            <span>Impostos e Taxas (Markup)</span>
+                            <strong id="res-carga-taxas">0,00%</strong>
+                        </div>
+
+                        <div id="alerta-markup" class="alerta-exequibilidade">
+                            ⚠️ <strong>Impossível:</strong> A soma de impostos, taxas e margem aproxima-se ou ultrapassa 100%. Reduza os valores.
+                        </div>
+                        <div id="alerta-orcamento" class="alerta-exequibilidade" style="background: rgba(220, 53, 69, 0.1); border-color: #DC3545; color: #FF6B6B;">
+                            ⚠️ <strong>Acima do Orçamento:</strong> Seu Preço-Alvo está acima do valor estimado pelo órgão.
+                        </div>
+
+                        <div style="margin-top: 25px;">
+                            <button id="btn-salvar-crm" class="btn-acao btn-crm" style="display: none;" onclick="efetivarSalvamentoCrm()">
+                                💾 Salvar Cotação no Item
+                            </button>
+                            <button class="btn-acao btn-secundario" onclick="window.limparCalculadora()">
+                                🗑️ Limpar Tudo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL SELECIONAR ITEM CRM -->
+    <div id="modal-selecionar-item" class="modal-overlay" style="display: none;">
+        <div class="modal-conteudo" style="max-width: 550px;">
+            
+            <div id="passo-1-licitacao">
+                <h3>Escolher Licitação (Passo 1/2)</h3>
+                <input type="text" id="pesquisa-crm-input" class="pesquisa-crm" placeholder="Pesquisar..." autocomplete="off" onkeyup="filtrarListaCrm()">
+                <div id="lista-licitacoes-crm" class="lista-crm"></div>
+                <button type="button" class="btn-acao btn-secundario" style="margin-top: 15px;" onclick="fecharModalSelecaoCrm()">Cancelar</button>
+            </div>
+
+            <div id="passo-2-item" style="display: none;">
+                <button class="btn-voltar" onclick="voltarPasso1Crm()">⬅ Voltar para Licitações</button>
+                <h3>Escolher Item (Passo 2/2)</h3>
+                <div id="lista-itens-crm" class="lista-crm"></div>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='calculadora.js') }}?v=4.1"></script>
+{% endblock %}

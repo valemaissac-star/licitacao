@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <style>
+        .card-documentos {
+            background: #0B1426;
+            border: 1px solid #1C2C4A;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: sans-serif;
+        }
+        .cabecalho-docs {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1C2C4A;
+            padding-bottom: 20px;
+            margin-bottom: 15px;
+        }
+        .cabecalho-docs h2 {
+            margin: 0;
+            color: #FFF;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .cabecalho-docs p {
+            margin: 5px 0 0 0;
+            color: #A0B0C0;
+            font-size: 13px;
+        }
+        
+        .btn-adicionar-doc {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+            border: none !important;
+            padding: 10px 16px !important;
+            border-radius: 4px !important;
+            font-weight: 700 !important;
+            font-size: 13px !important;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-adicionar-doc:hover {
+            background-color: #EAECEF !important;
+        }
+
+        .tabela-docs {
+            width: 100%;
+            border-collapse: collapse;
+            color: #FFF;
+            font-size: 13px;
+        }
+        .tabela-docs th {
+            text-align: left;
+            padding: 12px;
+            color: #7A8B9E;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            border-bottom: 1px solid #1C2C4A;
+        }
+        .tabela-docs td {
+            padding: 15px 12px;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+            vertical-align: middle;
+        }
+        .tabela-docs tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        
+        /* Badges de Status */
+        .badge-status {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-valido { background: rgba(33, 141, 78, 0.2); color: #4ADE80; border: 1px solid #218D4E; }
+        .status-avencer { background: rgba(245, 183, 0, 0.2); color: #F5B700; border: 1px solid #B8860B; }
+        .status-vencido { background: rgba(220, 53, 69, 0.2); color: #FF6B6B; border: 1px solid #DC3545; }
+        .status-permanente { background: rgba(160, 176, 192, 0.2); color: #A0B0C0; border: 1px solid #7A8B9E; }
+
+        .acoes-doc button, .acoes-doc a {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #FFF;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 5px;
+            transition: 0.2s;
+        }
+        .acoes-doc button:hover, .acoes-doc a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .btn-excluir {
+            border-color: rgba(220, 53, 69, 0.5) !important;
+            color: #FF6B6B !important;
+        }
+        .btn-excluir:hover {
+            background: rgba(220, 53, 69, 0.1) !important;
+        }
+        
+        .estado-vazio {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7A8B9E;
+        }
+
+        /* CORREÇÃO DO IMPUT DE ARQUIVO QUE ESTAVA A EXPLODIR */
+        .input-arquivo-custom {
+            display: flex;
+            align-items: center;
+            background: #0B1426;
+            border: 1px solid #1C2C4A;
+            border-radius: 4px;
+            color: #A0B0C0;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 0;
+            height: 38px;
+            overflow: hidden;
+            width: 100%;
+            box-sizing: border-box; /* Garante que respeita a largura do pai */
+        }
+        .input-arquivo-custom input[type="file"] {
+            display: none;
+        }
+        .btn-escolher-arquivo {
+            background: #FFFFFF;
+            color: #000000;
+            padding: 0 16px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+            border-right: 1px solid #1C2C4A;
+            flex-shrink: 0; /* IMPEDE que o botão branco seja esmagado */
+        }
+        .input-arquivo-custom:hover .btn-escolher-arquivo {
+            background: #EAECEF;
+        }
+        .nome-arquivo-selecionado {
+            padding: 0 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+            min-width: 0; /* IMPEDE o texto longo de explodir a largura da caixa flex */
+        }
+        
+        /* Ajuste dos botões de Salvar/Cancelar no Modal */
+        .botao-cancelar-modal {
+            background: transparent;
+            color: #FFF;
+            border: 1px solid #1C2C4A;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .botao-cancelar-modal:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .botao-salvar-modal {
+            background: #112B5A;
+            color: #FFF;
+            border: 1px solid #1C2C4A;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .botao-salvar-modal:hover {
+            background: #173875;
+        }
+
+        /* Ajuste na grelha para dar mais espaço ao anexo e não quebrar o texto da Validade */
+        .grade-modal-anexo {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr; /* O Anexo fica com 60% do espaço, a Data com 40% */
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+    </style>
+
+    <main class="pagina">
+        <header class="cabecalho">
+            <span class="marca">CONECTA LICITAÇÕES</span>
+            <h1>Repositório de Documentos</h1>
+            <p>Faça a gestão centralizada das certidões e habilitações da empresa.</p>
+        </header>
+
+        <section class="card-documentos">
+            <div class="cabecalho-docs">
+                <div>
+                    <h2>Meus Documentos</h2>
+                    <p>Acompanhe os prazos de validade para nunca perder uma licitação.</p>
+                </div>
+                <button id="btn-novo-doc" class="btn-adicionar-doc">
+                    + Adicionar Documento
+                </button>
+            </div>
+
+            <table class="tabela-docs">
+                <thead>
+                    <tr>
+                        <th>Nome do Documento</th>
+                        <th>Validade</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-documentos">
+                    <!-- Preenchido via JavaScript -->
+                </tbody>
+            </table>
+            
+            <div id="estado-vazio-docs" class="estado-vazio" style="display: none;">
+                Nenhum documento registado. Clique em "+ Adicionar Documento" para começar.
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL ADICIONAR DOCUMENTO -->
+    <div id="modal-documento" class="modal-overlay" style="display: none;">
+        <div class="modal-conteudo" style="max-width: 550px;">
+            <h3>Adicionar Documento</h3>
+            <p style="font-size: 13px; color: #A0B0C0; margin-bottom: 20px;">Registe a certidão e o sistema alertará quando estiver próxima de vencer.</p>
+            
+            <form id="form-documento">
+                <div class="campo" style="margin-bottom: 15px;">
+                    <label>Nome do Documento <span style="color: #FF6B6B;">*</span></label>
+                    <input type="text" id="doc-nome" placeholder="Ex: SICAF, Certidão Negativa FGTS, Balanço..." required autocomplete="off">
+                </div>
+
+                <div class="campo" style="margin-bottom: 15px;">
+                    <label>Link do Portal de Emissão (Opcional)</label>
+                    <input type="url" id="doc-link" placeholder="Ex: https://sicaf.gov.br" autocomplete="off">
+                </div>
+
+                <!-- Nova classe da grelha aplicada aqui -->
+                <div class="grade-modal-anexo">
+                    <div class="campo">
+                        <label>Data de Validade (Opcional)</label>
+                        <input type="date" id="doc-data">
+                    </div>
+                    <div class="campo" style="min-width: 0;"> <!-- min-width: 0 aqui garante que o flex filho não exploda a grelha -->
+                        <label>Anexo (Obrigatório) <span style="color: #FF6B6B;">*</span></label>
+                        <label class="input-arquivo-custom">
+                            <span class="btn-escolher-arquivo">Escolher arquivo</span>
+                            <span id="texto-arquivo" class="nome-arquivo-selecionado">Nenhum es...</span>
+                            <input type="file" id="doc-arquivo" accept=".pdf,image/*" required>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="modal-acoes">
+                    <button type="button" id="btn-cancelar-doc" class="botao-cancelar-modal">Cancelar</button>
+                    <button type="submit" class="botao-salvar-modal">Salvar Documento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <!-- Cache atualizado -->
+    <script src="{{ url_for('static', filename='documentos.js') }}?v=1.3"></script>
+{% endblock %}
