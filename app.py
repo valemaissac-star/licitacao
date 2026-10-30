@@ -19,7 +19,7 @@ if PASTA_RAIZ not in sys.path:
     sys.path.insert(0, PASTA_RAIZ)
 
 # Importa o motor de pesquisa unificado
-from pesquisa import pesquisar_oportunidades
+from pesquisa_antigo import pesquisar_oportunidades
 
 # ==========================================================
 # CONFIGURAÇÃO DO FLASK
